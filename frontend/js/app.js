@@ -890,15 +890,42 @@ async function setupWhatsAppGateway() {
   // Setup virtual smartphone lockscreen tap & home buttons
   const homeBtn = document.getElementById('phone-home-btn');
   const notifBanner = document.getElementById('phone-notification');
+  const phoneWidget = document.getElementById('virtual-phone');
+
+  if (phoneWidget) {
+    phoneWidget.addEventListener('click', (e) => {
+      // Expand phone on bubble click
+      if (phoneWidget.classList.contains('collapsed')) {
+        phoneWidget.classList.remove('collapsed');
+        // Play subtle unlock chime
+        try {
+          const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.frequency.setValueAtTime(659.25, audioCtx.currentTime); // E5
+          gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+          osc.start();
+          setTimeout(() => {
+            osc.stop();
+            audioCtx.close();
+          }, 150);
+        } catch (_) {}
+      }
+    });
+  }
 
   if (homeBtn) {
-    homeBtn.addEventListener('click', () => {
+    homeBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // Avoid triggering expand on the widget container click listener!
       resetVirtualPhone();
     });
   }
 
   if (notifBanner) {
-    notifBanner.addEventListener('click', () => {
+    notifBanner.addEventListener('click', (e) => {
+      e.stopPropagation();
       openVirtualWhatsApp();
     });
   }
@@ -936,6 +963,11 @@ function triggerPhoneAlert(pkgName, score, level) {
 
   if (!phone || !notif || !notifText) return;
 
+  // Auto-expand if currently collapsed
+  if (phone.classList.contains('collapsed')) {
+    phone.classList.remove('collapsed');
+  }
+
   // Make the smartphone shake & glow to simulate real notification alert
   phone.classList.add('glowing');
   setTimeout(() => phone.classList.remove('glowing'), 1500);
@@ -970,7 +1002,10 @@ function triggerPhoneAlert(pkgName, score, level) {
 function resetVirtualPhone() {
   const notif = document.getElementById('phone-notification');
   const body = document.getElementById('phone-screen-body');
+  const phone = document.getElementById('virtual-phone');
+  
   if (notif) notif.style.display = 'none';
+  if (phone) phone.classList.add('collapsed');
 
   if (body) {
     body.innerHTML = `
