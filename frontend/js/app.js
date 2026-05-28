@@ -370,8 +370,58 @@ function renderIntelTab(intel, bankingFlags) {
         <div class="flag-detail">${esc(f.detail)}</div>
       </div>`).join('');
   }
+  
+  // Add YARA Signature Rule Card
+  html += `
+    <div class="card" style="margin-top:1.5rem;border-top:2px solid var(--orange)">
+      <div class="card-label" style="color:var(--orange)">Incident Response — Automated YARA Signature</div>
+      <p style="font-size:0.8rem;color:var(--text-2);margin-bottom:0.75rem">Deployable search signature generated instantly based on dangerous accessibility permissions, suspect packages, and network indicators.</p>
+      <pre id="yara-codeblock" style="font-family:var(--mono);font-size:0.72rem;color:var(--accent);background:rgba(2,4,8,0.6);border:1px solid var(--border);border-radius:4px;padding:1rem;overflow-x:auto;margin-top:0.5rem;max-height:280px">Generating custom YARA rule...</pre>
+      <button class="btn btn-primary btn-sm" style="margin-top:0.75rem;border-color:rgba(255,159,10,0.3);color:var(--orange);background:rgba(255,159,10,0.06)" onclick="downloadYaraRule()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download YARA Rule (.yar)
+      </button>
+    </div>`;
+
   el.innerHTML = html || '<p class="loading-text">No threat intelligence available.</p>';
+  
+  // Fetch YARA rule asynchronously
+  setTimeout(loadYaraRule, 50);
 }
+
+// ── YARA Rules Service ──────────────────────────────────
+async function loadYaraRule() {
+  const codeblock = document.getElementById('yara-codeblock');
+  if (!codeblock || !currentAnalysisId) return;
+  try {
+    const res = await fetch(`${API}/api/status/${currentAnalysisId}/yara`);
+    if (res.ok) {
+      const text = await res.text();
+      codeblock.textContent = text;
+      window.currentYaraText = text;
+    } else {
+      codeblock.textContent = "Failed to generate YARA signature rule.";
+    }
+  } catch (err) {
+    codeblock.textContent = "Error loading YARA rule: " + err.message;
+  }
+}
+window.loadYaraRule = loadYaraRule;
+
+function downloadYaraRule() {
+  if (!window.currentYaraText) {
+    alert("YARA rule not ready yet.");
+    return;
+  }
+  const blob = new Blob([window.currentYaraText], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `gagma_threat_${currentAnalysisId}.yar`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+window.downloadYaraRule = downloadYaraRule;
 
 // ── Graph ──────────────────────────────────────────────
 function renderGraph(gd) {

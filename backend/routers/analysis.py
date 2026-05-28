@@ -81,6 +81,23 @@ async def get_report(analysis_id: str):
     return {"report": reports[analysis_id]}
 
 
+@router.get("/status/{analysis_id}/yara")
+async def get_yara_rule(analysis_id: str):
+    """Retrieve custom dynamically generated YARA signature for the analyzed sample."""
+    if analysis_id not in analyses:
+        raise HTTPException(404, "Analysis not found")
+
+    analysis = analyses[analysis_id]
+    if not analysis.static_analysis:
+        raise HTTPException(400, "Analysis is not complete or static data missing")
+
+    from services.yara_generator import generate_yara_rule
+    yara_text = generate_yara_rule(analysis_id, analysis.model_dump())
+
+    from fastapi.responses import PlainTextResponse
+    return PlainTextResponse(content=yara_text, media_type="text/plain")
+
+
 @router.get("/analyses")
 async def list_analyses():
     """List all analyses."""
