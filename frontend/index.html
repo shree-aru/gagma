@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="GAGMA — Automated Android malware analysis for banking security. Powered by graph databases and AI agents.">
-  <title>GAGMA — Mobile Threat Analysis Platform</title>
+  <title>GAGMA — Banking Threat Intelligence & Security Command Center</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
   <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -22,21 +22,20 @@
     <div class="header-inner">
       <div class="logo">
         <svg class="logo-mark" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="2" y="2" width="28" height="28" rx="6" stroke="#3b82f6" stroke-width="1.5" fill="none"/>
-          <circle cx="16" cy="10" r="2.5" fill="#3b82f6"/>
-          <circle cx="9" cy="22" r="2.5" fill="#6366f1"/>
-          <circle cx="23" cy="22" r="2.5" fill="#ef4444"/>
-          <line x1="16" y1="10" x2="9" y2="22" stroke="#3b82f6" stroke-width="1" opacity="0.5"/>
-          <line x1="16" y1="10" x2="23" y2="22" stroke="#6366f1" stroke-width="1" opacity="0.5"/>
-          <line x1="9" y1="22" x2="23" y2="22" stroke="#ef4444" stroke-width="1" opacity="0.5"/>
-          <circle cx="16" cy="16" r="1.5" fill="#3b82f6" opacity="0.6"/>
+          <path d="M16 2L4 7v8c0 5.25 5.12 10.12 12 12 6.88-1.88 12-6.75 12-12V7L16 2z" stroke="#00f0ff" stroke-width="2" stroke-linejoin="round" fill="rgba(0, 240, 255, 0.05)"/>
+          <path d="M16 8v10M12 13h8" stroke="#00ff66" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="16" cy="18" r="1" fill="#00ff66"/>
         </svg>
         <div>
           <div class="logo-name">GAGMA</div>
-          <div class="logo-sub">Graph-Augmented GenAI Malware Analyst</div>
+          <div class="logo-sub">Banking & Govt Mobile Threat Command Center</div>
         </div>
       </div>
       <div class="header-right">
+        <button class="btn-sandbox" id="btn-toggle-sandbox">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+          Simulation Sandbox
+        </button>
         <span class="badge-hackathon">PSB · DFS/IBA Hackathon 2026</span>
         <div class="status-pill">
           <span class="status-dot" id="status-dot"></span>
@@ -46,27 +45,52 @@
     </div>
   </header>
 
+  <!-- Sandbox Drawer -->
+  <div class="sandbox-drawer" id="sandbox-drawer">
+    <div class="sandbox-header">
+      <h3>Simulation Sandbox Console</h3>
+      <button class="btn-close" id="btn-close-sandbox">&times;</button>
+    </div>
+    <div class="sandbox-body">
+      <p>Simulate sophisticated malware threats targeted at Indian financial institutions using isolated high-fidelity threat models.</p>
+      <div class="scenario-buttons">
+        <button class="btn-scenario drinik" onclick="runDemo('drinik')">
+          <span class="scenario-title">Drinik v3 UPI overlay</span>
+          <span class="scenario-desc">Tactical banking trojan exploiting accessibility overlays to intercept UPI pins & SMS OTPs.</span>
+        </button>
+        <button class="btn-scenario sbi" onclick="runDemo('sbi-phishing')">
+          <span class="scenario-title">SBI YONO Phishing Clone</span>
+          <span class="scenario-desc">Phishing payload targeting customers using high-fidelity clone of YONO interface.</span>
+        </button>
+        <button class="btn-scenario safe" onclick="runDemo('clean')">
+          <span class="scenario-title">Clean Calculator Payload</span>
+          <span class="scenario-desc">Legitimate utility application with zero indicators or suspicious behaviors.</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Stats bar -->
   <div class="stats-bar">
     <div class="stats-inner">
       <div class="stat-item">
-        <span>APKs Analyzed</span>
-        <span class="stat-value" id="stat-total">0</span>
+        <span>Active Gateways</span>
+        <span class="stat-value" id="stat-total" style="color: #00f0ff">0</span>
       </div>
       <div class="stat-sep"></div>
       <div class="stat-item">
-        <span>Threats Detected</span>
-        <span class="stat-value" id="stat-threats">0</span>
+        <span>Blocked Indicators</span>
+        <span class="stat-value" id="stat-threats" style="color: #ff3b30">0</span>
       </div>
       <div class="stat-sep"></div>
       <div class="stat-item">
-        <span>Critical Alerts</span>
-        <span class="stat-value" id="stat-critical">0</span>
+        <span>Critical Incidents</span>
+        <span class="stat-value" id="stat-critical" style="color: #ff9f0a">0</span>
       </div>
       <div class="stat-sep"></div>
       <div class="stat-item">
-        <span>Avg. Risk Score</span>
-        <span class="stat-value" id="stat-avg">—</span>
+        <span>Defense Posture Score</span>
+        <span class="stat-value" id="stat-avg" style="color: #00ff66">—</span>
       </div>
     </div>
   </div>
@@ -75,40 +99,67 @@
     <!-- Upload Section -->
     <section id="upload-section" class="section">
       <div class="upload-header">
-        <h2>Submit APK for Analysis</h2>
-        <p>Upload a suspicious Android application for automated malware detection, behavioral analysis, and banking threat assessment.</p>
+        <h2>Threat Analysis & Verification Gateway</h2>
+        <p>Upload a suspicious APK for deep static, dynamic, graph-augmented, and Generative AI behavioral verdict.</p>
       </div>
 
       <div id="upload-zone" class="upload-zone">
+        <div class="upload-scan-line"></div>
         <div class="upload-icon-wrap">
           <svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="6" y="12" width="32" height="26" rx="3"/>
-            <path d="M22 8v18M16 14l6-6 6 6"/>
-            <path d="M14 30h16"/>
+            <path d="M22 2v20M12 12l10-10 10 10"/>
+            <rect x="4" y="28" width="36" height="12" rx="2" stroke="#00f0ff" stroke-width="1"/>
+            <path d="M12 34h20" stroke="#00f0ff"/>
           </svg>
         </div>
-        <h3>Drop APK file here or click to select</h3>
-        <p>Supports Android Package files (.apk) up to 50MB</p>
-        <span class="upload-meta">.APK &nbsp;·&nbsp; Max 50MB &nbsp;·&nbsp; SHA-256 Verified</span>
+        <h3>Submit APK for Threat Verdict</h3>
+        <p>Drag and drop `.apk` package file here or select file to scan</p>
+        <span class="upload-meta">Maximum File Size: 50MB &nbsp;·&nbsp; Automatic SHA-256 Hash Verification</span>
         <input type="file" id="file-input" accept=".apk">
       </div>
 
-      <!-- Demo Scenarios -->
-      <div style="margin-top:1.25rem;text-align:center">
-        <div class="card-label" style="margin-bottom:.65rem;text-align:center">Or run a pre-built threat scenario</div>
-        <div style="display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap">
-          <button class="btn btn-primary" onclick="runDemo('drinik')">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            Drinik v3 — UPI Overlay Trojan
-          </button>
-          <button class="btn" onclick="runDemo('sbi-phishing')" style="border-color:rgba(239,68,68,.3);color:#ef4444">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            SBI YONO — Phishing Clone
-          </button>
-          <button class="btn" onclick="runDemo('clean')" style="border-color:rgba(34,197,94,.3);color:#22c55e">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-            Clean Calculator — Safe App
-          </button>
+      <!-- Compliance & Threat Posture Widgets (shown on home screen) -->
+      <div class="home-widgets" id="home-widgets">
+        <div class="card card-hud">
+          <div class="card-label-hud">
+            <span class="card-dot-hud" style="background:#00f0ff"></span>
+            Regulatory Compliance Audits
+          </div>
+          <div class="hud-list">
+            <div class="hud-item">
+              <span class="hud-badge compl">Compliant</span>
+              <div class="hud-info">
+                <h4>RBI Digital Payment Security Controls</h4>
+                <p>Master Direction auditing requirements met for mobile apps.</p>
+              </div>
+            </div>
+            <div class="hud-item">
+              <span class="hud-badge compl">Compliant</span>
+              <div class="hud-info">
+                <h4>CERT-In Incident Response SLA</h4>
+                <p>Proactive prevention gateway verdicts return in &lt;1ms.</p>
+              </div>
+            </div>
+            <div class="hud-item">
+              <span class="hud-badge active">Active</span>
+              <div class="hud-info">
+                <h4>MITRE ATT&CK Mobile Mapping</h4>
+                <p>Analyzed APK findings mapped to structural mobile threat metrics.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card card-hud">
+          <div class="card-label-hud">
+            <span class="card-dot-hud" style="background:#ff3b30"></span>
+            Real-Time Threat Intelligence Feed
+          </div>
+          <div class="hud-list" id="hud-blocklist-feed">
+            <div class="hud-empty">
+              <p>No active incidents registered in database. Use the Sandbox Sandbox console in the header to run threat simulations.</p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -120,22 +171,22 @@
         </div>
         <div class="steps" id="steps-container">
           <div class="step" data-step="DECOMPILING">
-            <div class="step-dot">1</div><span>Decompile</span>
+            <div class="step-dot">01</div><span>Decompile</span>
           </div>
           <div class="step" data-step="EXTRACTING">
-            <div class="step-dot">2</div><span>Extract</span>
+            <div class="step-dot">02</div><span>Extract</span>
           </div>
           <div class="step" data-step="BUILDING_GRAPH">
-            <div class="step-dot">3</div><span>Graph</span>
+            <div class="step-dot">03</div><span>Graph</span>
           </div>
           <div class="step" data-step="ANALYZING">
-            <div class="step-dot">4</div><span>AI Analysis</span>
+            <div class="step-dot">04</div><span>AI Analysis</span>
           </div>
           <div class="step" data-step="SCORING">
-            <div class="step-dot">5</div><span>Scoring</span>
+            <div class="step-dot">05</div><span>Scoring</span>
           </div>
           <div class="step" data-step="COMPLETE">
-            <div class="step-dot">6</div><span>Complete</span>
+            <div class="step-dot">06</div><span>Complete</span>
           </div>
         </div>
         <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
@@ -147,7 +198,7 @@
       <!-- Top row: risk + info -->
       <div class="results-grid">
         <!-- Risk Score -->
-        <div class="card">
+        <div class="card card-result">
           <div class="card-label">Risk Assessment</div>
           <div class="risk-score-display">
             <div class="risk-number" id="risk-number">0</div>
@@ -158,7 +209,7 @@
         </div>
 
         <!-- APK Info -->
-        <div class="card">
+        <div class="card card-result">
           <div class="card-label">Application Metadata</div>
           <div class="info-rows" id="apk-info"></div>
         </div>
@@ -166,7 +217,7 @@
 
       <!-- Banking Flags -->
       <div id="banking-flags-section" class="banking-flags hidden">
-        <div class="card">
+        <div class="card card-result">
           <div class="card-label">Banking Sector Risk Flags</div>
           <div id="banking-flags-list"></div>
         </div>
@@ -174,14 +225,14 @@
 
       <!-- Kill Chain -->
       <div id="kill-chain-section" class="kill-chain hidden">
-        <div class="card">
+        <div class="card card-result">
           <div class="card-label">Attack Kill Chain</div>
           <div class="kc-timeline" id="kc-timeline"></div>
         </div>
       </div>
 
       <!-- Behavioral Findings -->
-      <div class="findings-card card" id="findings-card">
+      <div class="findings-card card card-result" id="findings-card">
         <div class="card-label">Behavioral Analysis — Detected Patterns</div>
         <div id="findings-list"></div>
       </div>
@@ -215,11 +266,11 @@
         <div class="tab-pane active" id="tab-content-graph">
           <div class="graph-controls">
             <div class="graph-legend">
-              <span class="leg-item"><span class="leg-dot" style="background:#3b82f6"></span>APK</span>
-              <span class="leg-item"><span class="leg-dot" style="background:#ef4444"></span>Dangerous Permission</span>
-              <span class="leg-item"><span class="leg-dot" style="background:#22c55e"></span>Normal Permission</span>
-              <span class="leg-item"><span class="leg-dot" style="background:#f97316"></span>Suspicious API</span>
-              <span class="leg-item"><span class="leg-dot" style="background:#eab308"></span>URL / IP</span>
+              <span class="leg-item"><span class="leg-dot" style="background:#00f0ff"></span>APK</span>
+              <span class="leg-item"><span class="leg-dot" style="background:#ff3b30"></span>Dangerous Permission</span>
+              <span class="leg-item"><span class="leg-dot" style="background:#00ff66"></span>Normal Permission</span>
+              <span class="leg-item"><span class="leg-dot" style="background:#ff9f0a"></span>Suspicious API</span>
+              <span class="leg-item"><span class="leg-dot" style="background:#ffea00"></span>URL / IP</span>
             </div>
             <button class="btn btn-sm" id="btn-fit-graph">Fit View</button>
           </div>
@@ -229,7 +280,7 @@
         <!-- Threat Intel -->
         <div class="tab-pane" id="tab-content-intel">
           <div style="display:flex;justify-content:flex-end;margin-bottom:1rem">
-            <button class="btn btn-sm" style="border-color:rgba(239,68,68,.3);color:#ef4444" onclick="blockAPK()">
+            <button class="btn btn-sm" style="border-color:rgba(255,59,48,.3);color:#ff3b30" onclick="blockAPK()">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
               Add to Enterprise Blocklist
             </button>
@@ -293,7 +344,7 @@
   </main>
 
   <footer>
-    <p>GAGMA v2.0 &nbsp;·&nbsp; PSB Cybersecurity, Fraud &amp; AI Hackathon &nbsp;·&nbsp; DFS / IBA &nbsp;·&nbsp; Aligned with CERT-In Guidelines &amp; RBI Cybersecurity Framework</p>
+    <p>GAGMA Security Command Center v2.0 &nbsp;·&nbsp; Members: PSB Cybersecurity Hackathon Alliance &nbsp;·&nbsp; Aligned with CERT-In Response &amp; RBI Master Directions</p>
   </footer>
 
   <script src="/js/app.js"></script>

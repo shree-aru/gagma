@@ -13,7 +13,10 @@ document.addEventListener('DOMContentLoaded', () => {
   setupChat();
   checkBackendStatus();
   loadStats();
+  setupSandboxDrawer();
+  loadBlocklistFeed();
   setInterval(loadStats, 10000);
+  setInterval(loadBlocklistFeed, 12000);
 });
 
 // ── Stats Bar ──────────────────────────────────────────
@@ -498,6 +501,81 @@ async function loadReport() {
     } catch { alert('Failed to download report.'); }
   };
   document.getElementById('btn-print-report').onclick = () => window.print();
+}
+
+// ── Sandbox & Threat Feed Overlays ──────────────────────
+function setupSandboxDrawer() {
+  const toggle = document.getElementById('btn-toggle-sandbox');
+  const close = document.getElementById('btn-close-sandbox');
+  const drawer = document.getElementById('sandbox-drawer');
+  
+  if (toggle && drawer) {
+    toggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      drawer.classList.toggle('open');
+    });
+  }
+  if (close && drawer) {
+    close.addEventListener('click', () => {
+      drawer.classList.remove('open');
+    });
+  }
+  document.addEventListener('click', (e) => {
+    if (drawer && drawer.classList.contains('open') && !drawer.contains(e.target)) {
+      drawer.classList.remove('open');
+    }
+  });
+}
+
+async function loadBlocklistFeed() {
+  const container = document.getElementById('hud-blocklist-feed');
+  if (!container) return;
+  try {
+    const res = await fetch(`${API}/api/prevent/stats`);
+    const stats = await res.json();
+    
+    const res2 = await fetch(`${API}/api/analyses`);
+    const list = await res2.json();
+    const blocked = list.filter(a => a.risk_score >= 80).slice(0, 3);
+    
+    if (blocked.length === 0 && stats.total_blocked === 0) {
+      container.innerHTML = `
+        <div class="hud-empty">
+          <p>No active incidents registered in database. Use the Simulation Sandbox console in the header to run threat simulations.</p>
+        </div>`;
+      return;
+    }
+    
+    let html = '';
+    blocked.forEach(a => {
+      const timeStr = new Date(a.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      html += `
+        <div class="hud-item" style="border-left: 2px solid var(--red);">
+          <span class="hud-badge blocked">Blocked</span>
+          <div class="hud-info">
+            <h4 style="font-family:var(--mono);font-size:0.75rem;color:var(--red);">${a.apk_hash.substring(0, 16)}...</h4>
+            <p>${a.apk_name || 'APK Payload'} &nbsp;·&nbsp; Risk Score: <strong>${a.risk_score}</strong> &nbsp;·&nbsp; ${timeStr}</p>
+          </div>
+        </div>`;
+    });
+    
+    if (html === '') {
+      html += `
+        <div class="hud-item">
+          <span class="hud-badge compl" style="background:rgba(0, 240, 255, 0.05);color:var(--accent)">Idle</span>
+          <div class="hud-info">
+            <h4>Gateway Ready</h4>
+            <p>Active signature auditing and blocking operational on port 80/443.</p>
+          </div>
+        </div>`;
+    }
+    container.innerHTML = html;
+  } catch (_) {
+    container.innerHTML = `
+      <div class="hud-empty">
+        <p>Telemetry system connecting to threat intelligence database...</p>
+      </div>`;
+  }
 }
 
 // ── Utilities ──────────────────────────────────────────
