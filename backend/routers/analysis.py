@@ -186,6 +186,23 @@ async def _run_full_analysis(analysis_id: str, file_path: Path):
         analysis.status = AnalysisStatus.COMPLETE
         logger.info(f"[{analysis_id}] Analysis complete!")
 
+        # Dispatch SIEM Webhook in the background
+        from backend.services.webhook_service import dispatch_webhook
+        webhook_payload = {
+            "analysis_id": analysis_id,
+            "apk_name": static_result.metadata.filename,
+            "apk_hash": static_result.metadata.sha256,
+            "package_name": static_result.metadata.package_name,
+            "risk_score": risk_score.total_score,
+            "risk_level": risk_score.risk_level.value,
+            "details": {
+                "danger_permissions": [p.name for p in static_result.permissions if p.is_dangerous],
+                "suspicious_apis": static_result.suspicious_api_calls,
+                "banking_flags": [f.flag_type for f in banking_flags] if banking_flags else []
+            }
+        }
+        asyncio.create_task(dispatch_webhook("threat.detected", webhook_payload))
+
     except Exception as e:
         logger.error(f"[{analysis_id}] Analysis failed: {e}", exc_info=True)
         analyses[analysis_id].status = AnalysisStatus.FAILED

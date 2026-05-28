@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/style.css?v=2.3">
+  <link rel="stylesheet" href="/css/style.css?v=2.4">
   <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
@@ -160,6 +160,27 @@
               <p>No active incidents registered in database. Use the Sandbox Sandbox console in the header to run threat simulations.</p>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- SIEM / MDM Webhook Gateway Integration -->
+      <div class="card card-hud" style="margin-top: 1.5rem;">
+        <div class="card-label-hud">
+          <span class="card-dot-hud" style="background:#ff9f0a"></span>
+          Enterprise SIEM & MDM Integration Gateway (Active Incident Webhooks)
+        </div>
+        <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;margin-top:0.5rem">
+          <div style="flex:1;min-width:300px">
+            <input type="url" id="webhook-url-input" placeholder="https://your-bank-siem.com/receiver-webhook" 
+                   style="width:100%;padding:0.6rem 1rem;background:rgba(2, 4, 8, 0.4);border:1px solid var(--border);border-radius:4px;color:var(--text-1);font-family:var(--mono);font-size:0.8rem;outline:none;transition:var(--t)">
+          </div>
+          <div style="display:flex;gap:0.5rem">
+            <button class="btn btn-primary btn-sm" id="btn-save-webhook">Link Gateway</button>
+            <button class="btn btn-sm" id="btn-test-webhook">Dispatch Test</button>
+          </div>
+        </div>
+        <div id="webhook-status-msg" style="margin-top:0.75rem;font-size:0.75rem;color:var(--text-3);font-family:var(--mono)">
+          No active SIEM webhook linked. Enter your threat receiver endpoint to automatically stream real-time incidents.
         </div>
       </div>
 
@@ -347,6 +368,6 @@
     <p>GAGMA Security Command Center v2.0 &nbsp;·&nbsp; Members: PSB Cybersecurity Hackathon Alliance &nbsp;·&nbsp; Aligned with CERT-In Response &amp; RBI Master Directions</p>
   </footer>
 
-  <script src="/js/app.js?v=2.3"></script>
+  <script src="/js/app.js?v=2.4"></script>
 </body>
 </html>

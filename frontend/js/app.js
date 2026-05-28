@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadStats();
   setupSandboxDrawer();
   loadBlocklistFeed();
+  setupWebhookGateway();
   setInterval(loadStats, 10000);
   setInterval(loadBlocklistFeed, 12000);
 });
@@ -576,6 +577,75 @@ async function loadBlocklistFeed() {
         <p>Telemetry system connecting to threat intelligence database...</p>
       </div>`;
   }
+}
+
+// ── SIEM / MDM Webhook Config Gateway ────────────────────
+async function setupWebhookGateway() {
+  const input = document.getElementById('webhook-url-input');
+  const btnSave = document.getElementById('btn-save-webhook');
+  const btnTest = document.getElementById('btn-test-webhook');
+  const statusMsg = document.getElementById('webhook-status-msg');
+  
+  if (!input || !btnSave || !btnTest || !statusMsg) return;
+
+  // Load existing configuration
+  try {
+    const res = await fetch(`${API}/api/webhooks/config`);
+    const data = await res.json();
+    if (data.url) {
+      input.value = data.url;
+      statusMsg.innerHTML = `Linked Gateway: <strong style="color:var(--green)">ACTIVE</strong> &nbsp;·&nbsp; <span style="color:var(--text-2)">Monitoring real-time telemetry stream.</span>`;
+    }
+  } catch (_) {}
+
+  // Save Config
+  btnSave.addEventListener('click', async () => {
+    const url = input.value.trim();
+    if (!url) {
+      statusMsg.innerHTML = `<span style="color:var(--red)">Error: Webhook URL cannot be empty.</span>`;
+      return;
+    }
+    statusMsg.innerHTML = `<span style="color:var(--orange)">Linking secure threat gateway...</span>`;
+    try {
+      const res = await fetch(`${API}/api/webhooks/config`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      });
+      if (res.ok) {
+        statusMsg.innerHTML = `Linked Gateway: <strong style="color:var(--green)">ACTIVE</strong> &nbsp;·&nbsp; <span style="color:var(--text-2)">Threat webhook registered in secure database.</span>`;
+      } else {
+        statusMsg.innerHTML = `<span style="color:var(--red)">Failed to link gateway. Verify API availability.</span>`;
+      }
+    } catch (err) {
+      statusMsg.innerHTML = `<span style="color:var(--red)">Error linking gateway: ${err.message}</span>`;
+    }
+  });
+
+  // Test Config
+  btnTest.addEventListener('click', async () => {
+    const url = input.value.trim();
+    if (!url) {
+      statusMsg.innerHTML = `<span style="color:var(--red)">Error: Enter a URL before dispatching test.</span>`;
+      return;
+    }
+    statusMsg.innerHTML = `<span style="color:var(--orange)">Dispatching mock incident threat payload to SIEM receiver...</span>`;
+    try {
+      const res = await fetch(`${API}/api/webhooks/test`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        statusMsg.innerHTML = `Test Status: <strong style="color:var(--green)">SUCCESS (200 OK)</strong> &nbsp;·&nbsp; <span style="color:var(--text-2)">SIEM/MDM successfully acknowledged mock incident payload!</span>`;
+      } else {
+        statusMsg.innerHTML = `Test Status: <strong style="color:var(--red)">FAILED</strong> &nbsp;·&nbsp; <span style="color:var(--red)">${data.detail || 'Service returned an error.'}</span>`;
+      }
+    } catch (err) {
+      statusMsg.innerHTML = `Test Status: <strong style="color:var(--red)">UNREACHABLE</strong> &nbsp;·&nbsp; <span style="color:var(--red)">${err.message}</span>`;
+    }
+  });
 }
 
 // ── Utilities ──────────────────────────────────────────

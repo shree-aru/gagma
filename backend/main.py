@@ -23,7 +23,7 @@ from config import CORS_ORIGINS
 from services.graph_service import setup_schema, close_driver
 from services.database import init_db
 from middleware.auth import add_security_headers
-from routers import analysis, chat, demo, prevention
+from routers import analysis, chat, demo, prevention, webhooks
 
 # ── Logging ────────────────────────────────────────────
 logging.basicConfig(
@@ -103,6 +103,7 @@ app.include_router(analysis.router)
 app.include_router(chat.router)
 app.include_router(demo.router)
 app.include_router(prevention.router)
+app.include_router(webhooks.router)
 
 # ── Serve Frontend ─────────────────────────────────────
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"

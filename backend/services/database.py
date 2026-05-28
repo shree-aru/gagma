@@ -91,6 +91,14 @@ class APIKey(Base):
     rate_limit = Column(Integer, default=60)  # requests per minute
 
 
+class SystemSetting(Base):
+    """System configuration parameters (e.g. SIEM Webhook URL)."""
+    __tablename__ = "system_settings"
+
+    key = Column(String(64), primary_key=True)
+    value = Column(Text, default="")
+
+
 # ── Create Tables ──────────────────────────────────────
 
 def init_db():
@@ -254,3 +262,20 @@ def log_audit(action: str, actor: str = "anonymous", resource_id: str = "",
             ip_address=ip_address,
         )
         db.add(entry)
+
+
+def get_system_setting(key: str) -> str:
+    """Get a system setting value."""
+    with get_db_session() as db:
+        record = db.query(SystemSetting).filter_by(key=key).first()
+        return record.value if record else ""
+
+
+def save_system_setting(key: str, value: str):
+    """Save a system setting."""
+    with get_db_session() as db:
+        record = db.query(SystemSetting).filter_by(key=key).first()
+        if not record:
+            record = SystemSetting(key=key)
+            db.add(record)
+        record.value = value
