@@ -1,13 +1,15 @@
 """
-GAGMA Webhook Router — Configure and test SIEM/MDM automated incident webhooks.
+GAGMA Webhook Router — Configure and test SIEM/MDM automated incident webhooks and WhatsApp alerting.
 """
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from services.database import get_system_setting, save_system_setting, log_audit
 from services.webhook_service import test_webhook_connection
+from services.whatsapp_service import get_whatsapp_config, save_whatsapp_config, send_whatsapp_message
 
 router = APIRouter(prefix="/api/webhooks", tags=["webhooks"])
 
+# ── SIEM Webhook Settings ──────────────────────────────
 class WebhookConfig(BaseModel):
     url: str
 
@@ -39,3 +41,49 @@ async def test_webhook(config: WebhookConfig):
     else:
         log_audit("TEST_WEBHOOK_FAILED", actor="administrator", detail=f"Webhook test failed for: {url}")
         raise HTTPException(status_code=502, detail="Failed to connect or receive 2xx response from target URL")
+
+
+# ── WhatsApp Bot Settings ─────────────────────────────
+class WhatsAppConfig(BaseModel):
+    enabled: bool
+    phone: str
+    apikey: str
+
+@router.get("/whatsapp")
+async def get_wa_config():
+    """Retrieve WhatsApp alert configuration."""
+    return get_whatsapp_config()
+
+@router.post("/whatsapp")
+async def save_wa_config(config: WhatsAppConfig):
+    """Update and persist WhatsApp configurations."""
+    save_whatsapp_config(
+        enabled=config.enabled,
+        phone=config.phone,
+        apikey=config.apikey
+    )
+    return {"status": "success", "config": get_whatsapp_config()}
+
+@router.post("/whatsapp/test")
+async def test_wa(config: WhatsAppConfig):
+    """Trigger an instant manual test notification via WhatsApp."""
+    phone = config.phone.strip()
+    apikey = config.apikey.strip()
+    
+    if not phone or not apikey:
+        raise HTTPException(status_code=400, detail="Phone number and API Key are required to run test")
+        
+    test_msg = (
+        "🟢 *GAGMA SECURE COMMAND CENTER* 🟢\n\n"
+        "This is an automated *Test Notification* from your GAGMA SOC Portal.\n"
+        "Your WhatsApp incident alert gateway is fully *Connected & Active*!\n\n"
+        "_Incident logs and real-time mobile payloads will deliver here._"
+    )
+    
+    success = await send_whatsapp_message(phone=phone, apikey=apikey, text=test_msg)
+    if success:
+        log_audit("TEST_WHATSAPP", actor="administrator", detail=f"WhatsApp test alert delivered to {phone}")
+        return {"status": "success", "message": "WhatsApp test notification sent successfully!"}
+    else:
+        log_audit("TEST_WHATSAPP_FAILED", actor="administrator", detail=f"WhatsApp test failed for {phone}")
+        raise HTTPException(status_code=502, detail="Failed to deliver WhatsApp test message. Verify API key and phone number.")

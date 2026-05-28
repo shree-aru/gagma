@@ -252,6 +252,18 @@ async def _run_full_analysis(analysis_id: str, file_path: Path):
         except Exception as webhook_err:
             logger.error(f"[{analysis_id}] Webhook dispatch setup failed: {webhook_err}")
 
+        # Dispatch Automated WhatsApp Alert in the background
+        try:
+            from services.whatsapp_service import auto_dispatch_whatsapp_alert
+            asyncio.create_task(auto_dispatch_whatsapp_alert(
+                analysis_id=analysis_id,
+                package_name=static_result.metadata.package_name,
+                risk_score=risk_score.total_score,
+                risk_level=risk_score.risk_level.value
+            ))
+        except Exception as wa_err:
+            logger.error(f"[{analysis_id}] WhatsApp dispatch setup failed: {wa_err}")
+
     except Exception as e:
         logger.error(f"[{analysis_id}] Analysis failed: {e}", exc_info=True)
         if analysis_id in analyses:

@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupSandboxDrawer();
   loadBlocklistFeed();
   setupWebhookGateway();
+  setupWhatsAppGateway();
   setInterval(loadStats, 10000);
   setInterval(loadBlocklistFeed, 12000);
 });
@@ -175,6 +176,14 @@ function showResults(data) {
   if (data.threat_intel) { currentThreatIntel = data.threat_intel; renderIntelTab(data.threat_intel, data.banking_flags || []); }
   if (data.dynamic_analysis) renderDynamic(data.dynamic_analysis);
   loadReport();
+  
+  // Trigger Virtual CSO Smartphone push alert for High/Critical risk profiles
+  if (data.risk_score && data.risk_score.total_score >= 50 && data.static_analysis) {
+    const pkg = data.static_analysis.metadata.package_name;
+    const score = data.risk_score.total_score;
+    const lvl = data.risk_score.risk_level;
+    triggerPhoneAlert(pkg, score, lvl);
+  }
 }
 
 function renderDynamic(dyn) {
@@ -795,4 +804,249 @@ function esc(str) {
   const d = document.createElement('div');
   d.textContent = str;
   return d.innerHTML;
+}
+
+// ── WhatsApp Bot Alert Gateway ───────────────────────────
+async function setupWhatsAppGateway() {
+  const checkEnabled = document.getElementById('wa-enabled');
+  const inputPhone = document.getElementById('wa-phone');
+  const inputApiKey = document.getElementById('wa-apikey');
+  const btnSave = document.getElementById('btn-save-wa');
+  const btnTest = document.getElementById('btn-test-wa');
+  const statusMsg = document.getElementById('wa-status-msg');
+
+  if (!checkEnabled || !inputPhone || !inputApiKey || !btnSave || !btnTest || !statusMsg) return;
+
+  // Update Virtual phone lockscreen time dynamically
+  updateVirtualPhoneClock();
+  setInterval(updateVirtualPhoneClock, 30000);
+
+  // Load existing config
+  try {
+    const res = await fetch(`${API}/api/webhooks/whatsapp`);
+    const config = await res.json();
+    checkEnabled.checked = config.enabled;
+    inputPhone.value = config.phone || '';
+    inputApiKey.value = config.apikey || '';
+    if (config.enabled && config.phone) {
+      statusMsg.innerHTML = `Active Alerting: <strong style="color:#00ff66">ENABLED</strong> &nbsp;·&nbsp; <span style="color:var(--text-2)">Broadcasting threats to ${esc(config.phone)}</span>`;
+    }
+  } catch (_) {}
+
+  // Save Settings
+  btnSave.addEventListener('click', async () => {
+    const enabled = checkEnabled.checked;
+    const phone = inputPhone.value.trim();
+    const apikey = inputApiKey.value.trim();
+
+    if (enabled && (!phone || !apikey)) {
+      statusMsg.innerHTML = `<span style="color:var(--red)">Error: Phone number and API Key are required to enable alerts.</span>`;
+      return;
+    }
+
+    statusMsg.innerHTML = `<span style="color:var(--orange)">Updating alert registry...</span>`;
+    try {
+      const res = await fetch(`${API}/api/webhooks/whatsapp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled, phone, apikey })
+      });
+      if (res.ok) {
+        statusMsg.innerHTML = `Active Alerting: <strong style="color:#00ff66">${enabled ? 'ENABLED' : 'DISABLED'}</strong> &nbsp;·&nbsp; <span style="color:var(--text-2)">Configuration successfully locked to SQLite.</span>`;
+      } else {
+        statusMsg.innerHTML = `<span style="color:var(--red)">Failed to save configuration.</span>`;
+      }
+    } catch (err) {
+      statusMsg.innerHTML = `<span style="color:var(--red)">Connection Error: ${err.message}</span>`;
+    }
+  });
+
+  // Test Alerts
+  btnTest.addEventListener('click', async () => {
+    const phone = inputPhone.value.trim();
+    const apikey = inputApiKey.value.trim();
+    if (!phone || !apikey) {
+      statusMsg.innerHTML = `<span style="color:var(--red)">Error: Input target phone and API key to send test message.</span>`;
+      return;
+    }
+    statusMsg.innerHTML = `<span style="color:var(--orange)">Broadcasting instant WhatsApp test payload...</span>`;
+    try {
+      const res = await fetch(`${API}/api/webhooks/whatsapp/test`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: true, phone, apikey })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        statusMsg.innerHTML = `Test Dispatch: <strong style="color:#00ff66">SUCCESS</strong> &nbsp;·&nbsp; <span style="color:var(--text-2)">Check your phone! Message sent.</span>`;
+      } else {
+        statusMsg.innerHTML = `Test Dispatch: <strong style="color:var(--red)">FAILED</strong> &nbsp;·&nbsp; <span style="color:var(--red)">${data.detail || 'Service connection error.'}</span>`;
+      }
+    } catch (err) {
+      statusMsg.innerHTML = `Test Dispatch: <strong style="color:var(--red)">ERROR</strong> &nbsp;·&nbsp; <span style="color:var(--red)">${err.message}</span>`;
+    }
+  });
+
+  // Setup virtual smartphone lockscreen tap & home buttons
+  const homeBtn = document.getElementById('phone-home-btn');
+  const notifBanner = document.getElementById('phone-notification');
+
+  if (homeBtn) {
+    homeBtn.addEventListener('click', () => {
+      resetVirtualPhone();
+    });
+  }
+
+  if (notifBanner) {
+    notifBanner.addEventListener('click', () => {
+      openVirtualWhatsApp();
+    });
+  }
+}
+
+function updateVirtualPhoneClock() {
+  const clockText = document.getElementById('lockscreen-clock-text');
+  const timeBarText = document.getElementById('phone-current-time');
+  const dateText = document.getElementById('lockscreen-date-text');
+
+  const now = new Date();
+  const hrs = String(now.getHours()).padStart(2, '0');
+  const mins = String(now.getMinutes()).padStart(2, '0');
+  const clockStr = `${hrs}:${mins}`;
+
+  if (clockText) clockText.textContent = clockStr;
+  if (timeBarText) timeBarText.textContent = clockStr;
+
+  if (dateText) {
+    const options = { weekday: 'long', month: 'short', day: 'numeric' };
+    dateText.textContent = now.toLocaleDateString('en-US', options);
+  }
+}
+
+let activeAlertPkg = '';
+let activeAlertScore = 0;
+
+function triggerPhoneAlert(pkgName, score, level) {
+  activeAlertPkg = pkgName;
+  activeAlertScore = score;
+
+  const phone = document.getElementById('virtual-phone');
+  const notif = document.getElementById('phone-notification');
+  const notifText = document.getElementById('notif-body-text');
+
+  if (!phone || !notif || !notifText) return;
+
+  // Make the smartphone shake & glow to simulate real notification alert
+  phone.classList.add('glowing');
+  setTimeout(() => phone.classList.remove('glowing'), 1500);
+
+  // Set notification text
+  notifText.innerHTML = `🚨 <strong>Threat:</strong> ${esc(pkgName.split('.').pop())}<br>Risk score: <span style="color:#ff3b30;font-weight:700">${score}/100</span>`;
+  
+  // Slide down notification
+  notif.style.display = 'block';
+
+  // Play a beautiful synthetic audio chime if browser context is unblocked
+  try {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    
+    // Quick dual-tone chime
+    osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+    osc.start();
+    
+    osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.15); // A5
+    setTimeout(() => {
+      osc.stop();
+      audioCtx.close();
+    }, 350);
+  } catch (_) {}
+}
+
+function resetVirtualPhone() {
+  const notif = document.getElementById('phone-notification');
+  const body = document.getElementById('phone-screen-body');
+  if (notif) notif.style.display = 'none';
+
+  if (body) {
+    body.innerHTML = `
+      <div class="phone-lockscreen" id="phone-lockscreen-view">
+        <div class="lockscreen-clock" id="lockscreen-clock-text">22:42</div>
+        <div class="lockscreen-date" id="lockscreen-date-text">Thursday, May 28</div>
+        <div class="lockscreen-hint">🔒 CSO Mobilestation</div>
+      </div>
+    `;
+    updateVirtualPhoneClock();
+  }
+}
+
+function openVirtualWhatsApp() {
+  const notif = document.getElementById('phone-notification');
+  const body = document.getElementById('phone-screen-body');
+  if (notif) notif.style.display = 'none';
+
+  if (!body) return;
+
+  // Render a high-fidelity WhatsApp screen
+  body.innerHTML = `
+    <div class="phone-chat-screen">
+      <div class="phone-chat-header">
+        <span style="font-size:0.7rem">🟢</span>
+        <div>
+          <div style="font-size:0.55rem;color:#fff">GAGMA Threat Bot</div>
+          <div style="font-size:0.4rem;color:rgba(255,255,255,0.4);font-weight:400">online</div>
+        </div>
+      </div>
+      <div class="phone-chat-messages" id="phone-chat-logs">
+        <div class="phone-bubble incoming">
+          🚨 <strong>CRITICAL INCIDENT ALERT</strong><br><br>
+          Malware detected on host node.<br>
+          ■ <strong>APK:</strong> ${esc(activeAlertPkg)}<br>
+          ■ <strong>Risk:</strong> ${activeAlertScore}/100<br><br>
+          Seeding system firewalls.
+        </div>
+        <div class="phone-bubble incoming" id="phone-threat-recomm">
+          Recommended countermeasure: <strong>QUARANTINE_DEVICE</strong>. Tap below to dispatch.
+        </div>
+      </div>
+      <div style="padding:4px;border-top:1px solid rgba(255,255,255,0.05);display:flex;justify-content:center" id="phone-chat-input-area">
+        <button id="btn-phone-quarantine" style="background:#ff3b30;color:#fff;border:none;border-radius:4px;padding:3px 8px;font-size:0.45rem;font-weight:700;cursor:pointer;width:95%">
+          Lock & Quarantine Device
+        </button>
+      </div>
+    </div>
+  `;
+
+  // Attach button triggers inside phone
+  const qBtn = document.getElementById('btn-phone-quarantine');
+  if (qBtn) {
+    qBtn.addEventListener('click', () => {
+      const logs = document.getElementById('phone-chat-logs');
+      const inputArea = document.getElementById('phone-chat-input-area');
+      if (logs) {
+        // User response bubble
+        const userBubble = document.createElement('div');
+        userBubble.className = 'phone-bubble outgoing';
+        userBubble.textContent = 'Command Authorized: Dispatching Lock';
+        logs.appendChild(userBubble);
+        logs.scrollTop = logs.scrollHeight;
+
+        // Bot response bubble
+        setTimeout(() => {
+          const replyBubble = document.createElement('div');
+          replyBubble.className = 'phone-bubble incoming';
+          replyBubble.innerHTML = '🛡️ <strong>MDM Payload Dispatched:</strong> quarantine completed. Device lock active.';
+          logs.appendChild(replyBubble);
+          logs.scrollTop = logs.scrollHeight;
+        }, 800);
+      }
+      if (inputArea) {
+        inputArea.innerHTML = '<span style="font-size:0.4rem;color:#00ff66;font-family:var(--mono)">Incident Resolved (MDM Active)</span>';
+      }
+    });
+  }
 }
