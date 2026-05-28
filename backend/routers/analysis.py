@@ -264,6 +264,18 @@ async def _run_full_analysis(analysis_id: str, file_path: Path):
         except Exception as wa_err:
             logger.error(f"[{analysis_id}] WhatsApp dispatch setup failed: {wa_err}")
 
+        # Dispatch Automated Telegram Alert in the background
+        try:
+            from services.telegram_service import auto_dispatch_telegram_alert
+            asyncio.create_task(auto_dispatch_telegram_alert(
+                analysis_id=analysis_id,
+                package_name=static_result.metadata.package_name,
+                risk_score=risk_score.total_score,
+                risk_level=risk_score.risk_level.value
+            ))
+        except Exception as tg_err:
+            logger.error(f"[{analysis_id}] Telegram dispatch setup failed: {tg_err}")
+
     except Exception as e:
         logger.error(f"[{analysis_id}] Analysis failed: {e}", exc_info=True)
         if analysis_id in analyses:

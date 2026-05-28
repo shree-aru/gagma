@@ -87,3 +87,50 @@ async def test_wa(config: WhatsAppConfig):
     else:
         log_audit("TEST_WHATSAPP_FAILED", actor="administrator", detail=f"WhatsApp test failed for {phone}")
         raise HTTPException(status_code=502, detail="Failed to deliver WhatsApp test message. Verify API key and phone number.")
+
+
+# ── Telegram Bot Settings ──────────────────────────────
+from services.telegram_service import get_telegram_config, save_telegram_config, send_telegram_message
+
+class TelegramConfig(BaseModel):
+    enabled: bool
+    chat_id: str
+    bot_token: str = ""
+
+@router.get("/telegram")
+async def get_tg_config():
+    """Retrieve Telegram alert configuration."""
+    return get_telegram_config()
+
+@router.post("/telegram")
+async def save_tg_config(config: TelegramConfig):
+    """Update and persist Telegram configurations."""
+    save_telegram_config(
+        enabled=config.enabled,
+        chat_id=config.chat_id,
+        bot_token=config.bot_token
+    )
+    return {"status": "success", "config": get_telegram_config()}
+
+@router.post("/telegram/test")
+async def test_tg(config: TelegramConfig):
+    """Trigger an instant manual test notification via Telegram Bot."""
+    chat_id = config.chat_id.strip()
+    
+    if not chat_id:
+        raise HTTPException(status_code=400, detail="Telegram Chat ID is required to run test")
+        
+    test_msg = (
+        "🟢 *GAGMA SECURE COMMAND CENTER* 🟢\n\n"
+        "This is an automated *Test Notification* from your GAGMA SOC Portal.\n"
+        "Your Telegram incident alert gateway is fully *Connected & Active*!\n\n"
+        "_Incident logs and real-time mobile payloads will deliver here._"
+    )
+    
+    success = await send_telegram_message(chat_id=chat_id, text=test_msg, custom_token=config.bot_token)
+    if success:
+        log_audit("TEST_TELEGRAM", actor="administrator", detail=f"Telegram test alert delivered to Chat ID {chat_id}")
+        return {"status": "success", "message": "Telegram test notification sent successfully!"}
+    else:
+        log_audit("TEST_TELEGRAM_FAILED", actor="administrator", detail=f"Telegram test failed for Chat ID {chat_id}")
+        raise HTTPException(status_code=502, detail="Failed to deliver Telegram test message. Verify Chat ID.")
