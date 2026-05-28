@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/style.css?v=2.5">
+  <link rel="stylesheet" href="/css/style.css?v=2.6">
   <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
@@ -261,9 +261,13 @@
       <!-- Tabs -->
       <div class="tabs-wrap">
         <div class="tabs-nav">
-          <button class="tab-btn active" data-tab="graph" id="tab-graph">
+          <button class="tab-btn" data-tab="graph" id="tab-graph">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><path d="M12 7v4M10.5 17.5l-3.5-8M13.5 17.5l3.5-8"/></svg>
             Knowledge Graph
+          </button>
+          <button class="tab-btn" data-tab="campaign" id="tab-campaign">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="12" cy="12" r="3"/><path d="M12 9v3m0 0l3 3m-3-3l-3 3m3-3V9"/></svg>
+            Campaign Clusters
           </button>
           <button class="tab-btn" data-tab="intel" id="tab-intel">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -296,6 +300,24 @@
             <button class="btn btn-sm" id="btn-fit-graph">Fit View</button>
           </div>
           <div id="graph-container" class="graph-container"></div>
+        </div>
+
+        <!-- Campaign Cluster Graph -->
+        <div class="tab-pane" id="tab-content-campaign">
+          <div class="graph-controls">
+            <div class="graph-legend">
+              <span class="leg-item"><span class="leg-dot" style="background:#00f0ff"></span>APK Nodes</span>
+              <span class="leg-item"><span class="leg-dot" style="background:#ff3b30"></span>Shared Dangerous Perms</span>
+              <span class="leg-item"><span class="leg-dot" style="background:#ff9f0a"></span>Shared APIs</span>
+              <span class="leg-item"><span class="leg-dot" style="background:#f59e0b"></span>C&C IP Address</span>
+            </div>
+            <button class="btn btn-sm" id="btn-fit-campaign">Fit View</button>
+          </div>
+          <div id="campaign-graph-container" class="graph-container" style="height:500px;background:rgba(2,4,8,0.5);border:1px solid var(--border);border-radius:6px;position:relative">
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:var(--mono);color:var(--text-3);font-size:0.8rem" id="campaign-loading">
+              Loading campaign clusters...
+            </div>
+          </div>
         </div>
 
         <!-- Threat Intel -->
@@ -368,6 +390,6 @@
     <p>GAGMA Security Command Center v2.0 &nbsp;·&nbsp; Members: PSB Cybersecurity Hackathon Alliance &nbsp;·&nbsp; Aligned with CERT-In Response &amp; RBI Master Directions</p>
   </footer>
 
-  <script src="/js/app.js?v=2.5"></script>
+  <script src="/js/app.js?v=2.6"></script>
 </body>
 </html>

@@ -470,9 +470,83 @@ function setupTabs() {
       btn.classList.add('active');
       document.getElementById('tab-content-' + btn.dataset.tab).classList.add('active');
       if (btn.dataset.tab === 'graph' && graphNetwork) graphNetwork.fit({ animation: { duration: 300 } });
+      if (btn.dataset.tab === 'campaign') {
+        loadCampaignGraph();
+      }
     });
   });
 }
+
+let campaignNetwork = null;
+async function loadCampaignGraph() {
+  const container = document.getElementById('campaign-graph-container');
+  const loading = document.getElementById('campaign-loading');
+  if (!container) return;
+  
+  if (loading) {
+    loading.style.display = 'block';
+    loading.textContent = 'Loading campaign clusters...';
+  }
+  
+  try {
+    const res = await fetch(`${API}/api/graph/campaign-clustering`);
+    const gd = await res.json();
+    
+    if (loading) loading.style.display = 'none';
+    
+    if (!gd || !gd.nodes || !gd.nodes.length) {
+      container.innerHTML = '<p class="loading-text" style="padding-top:200px">No active campaign cluster data available. Scan multiple banking APKs to view clusters.</p>';
+      return;
+    }
+    
+    const colors = {
+      apk: { background: '#00f0ff', border: '#00c8ff', font: { color: '#fff' } },
+      permission_dangerous: { background: '#ef4444', border: '#dc2626', font: { color: '#fff' } },
+      permission_normal: { background: '#22c55e', border: '#16a34a', font: { color: '#000' } },
+      api_critical: { background: '#dc2626', border: '#b91c1c', font: { color: '#fff' } },
+      api_high: { background: '#f97316', border: '#ea580c', font: { color: '#000' } },
+      api_medium: { background: '#eab308', border: '#ca8a04', font: { color: '#000' } },
+      api_low: { background: '#22c55e', border: '#16a34a', font: { color: '#000' } },
+      url: { background: '#eab308', border: '#ca8a04', font: { color: '#000' } },
+      ip: { background: '#f59e0b', border: '#d97706', font: { color: '#000' } },
+    };
+    
+    const nodes = new vis.DataSet(gd.nodes.map(n => ({
+      ...n,
+      shape: n.group === 'apk' ? 'diamond' : 'dot',
+      color: colors[n.group] || { background: '#4a5568', border: '#374151' },
+      font: { color: '#dce3f0', size: n.group === 'apk' ? 12 : 9, face: 'Inter' },
+      shadow: { enabled: true, color: 'rgba(0,0,0,.4)', size: 8 },
+    })));
+    
+    const edges = new vis.DataSet(gd.edges.map(e => ({
+      ...e,
+      arrows: 'to',
+      font: { color: '#4a5568', size: 8, face: 'Inter', strokeWidth: 0 },
+      smooth: { type: 'curvedCW', roundness: 0.2 },
+      width: 1.5,
+      color: { color: '#1e293b' },
+    })));
+    
+    const opts = {
+      physics: {
+        forceAtlas2Based: { gravitationalConstant: -50, centralGravity: 0.01, springLength: 150 },
+        solver: 'forceAtlas2Based',
+        stabilization: { iterations: 120 }
+      },
+      interaction: { hover: true, tooltipDelay: 100 },
+      nodes: { borderWidth: 2, borderWidthSelected: 3 },
+      background: { color: 'transparent' },
+    };
+    
+    campaignNetwork = new vis.Network(container, { nodes, edges }, opts);
+    document.getElementById('btn-fit-campaign').onclick = () => campaignNetwork.fit({ animation: { duration: 400 } });
+  } catch (err) {
+    if (loading) loading.style.display = 'none';
+    container.innerHTML = `<p class="loading-text" style="padding-top:200px;color:var(--red)">Failed to load campaign clusters: ${err.message}</p>`;
+  }
+}
+window.loadCampaignGraph = loadCampaignGraph;
 
 // ── Chat ───────────────────────────────────────────────
 function setupChat() {

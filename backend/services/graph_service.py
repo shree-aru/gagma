@@ -410,3 +410,114 @@ EXAMPLE QUERIES:
 2. Find suspicious API calls: MATCH (a:APK)-[:INVOKES_API]->(api:APICall) WHERE api.severity IN ['high', 'critical'] RETURN api.name, api.category
 3. Find network connections: MATCH (a:APK)-[:CONNECTS_TO]->(target) RETURN labels(target)[0] as type, target.value as target
 """
+
+
+def generate_campaign_clustering_graph(analyses_list: list[dict]) -> dict:
+    """
+    Build a unified multi-APK knowledge graph where multiple analyzed payloads 
+    physically cluster around shared permissions, API calls, and threat indicators.
+    """
+    vis_nodes = []
+    vis_edges = []
+    
+    seen_nodes = set()
+
+    for item in analyses_list:
+        analysis_id = item.get("analysis_id")
+        
+        from services.database import load_analysis
+        full_data = load_analysis(analysis_id)
+        if not full_data:
+            continue
+            
+        static = full_data.get("static_analysis", {})
+        meta = static.get("metadata", {})
+        if not meta:
+            continue
+            
+        # 1. Add APK node
+        apk_node_id = f"apk_{analysis_id}"
+        if apk_node_id not in seen_nodes:
+            seen_nodes.add(apk_node_id)
+            vis_nodes.append({
+                "id": apk_node_id,
+                "label": meta.get("package_name", "APK")[:20],
+                "group": "apk",
+                "title": f"Package: {meta.get('package_name')}\nSHA256: {meta.get('sha256')}\nRisk Score: {full_data.get('risk_score', {}).get('total_score', 0)}/100",
+                "size": 35
+            })
+
+        # 2. Permissions
+        permissions = static.get("permissions", [])
+        for perm in permissions:
+            perm_name = perm.get("name", "")
+            if not perm_name:
+                continue
+            
+            perm_node_id = f"perm_{perm_name}"
+            if perm_node_id not in seen_nodes:
+                seen_nodes.add(perm_node_id)
+                is_susp = perm.get("is_suspicious", False)
+                vis_nodes.append({
+                    "id": perm_node_id,
+                    "label": perm_name.split(".")[-1],
+                    "group": "permission_dangerous" if is_susp else "permission_normal",
+                    "title": f"Permission: {perm_name}",
+                    "size": 18 if is_susp else 10
+                })
+                
+            vis_edges.append({
+                "from": apk_node_id,
+                "to": perm_node_id,
+                "label": "REQUESTS",
+                "color": "#ef4444" if perm.get("is_suspicious") else "#6b7280"
+            })
+
+        # 3. Suspicious API calls
+        suspicious_apis = static.get("suspicious_api_calls", [])
+        for api in suspicious_apis:
+            api_call = api.get("api_call", "")
+            if not api_call:
+                continue
+            
+            api_node_id = f"api_{api_call}"
+            if api_node_id not in seen_nodes:
+                seen_nodes.add(api_node_id)
+                sev = api.get("severity", "medium")
+                vis_nodes.append({
+                    "id": api_node_id,
+                    "label": api_call.split("/")[-1][:25],
+                    "group": f"api_{sev}",
+                    "title": f"API: {api_call}\nCategory: {api.get('category')}\nSeverity: {sev}",
+                    "size": 14
+                })
+                
+            vis_edges.append({
+                "from": apk_node_id,
+                "to": api_node_id,
+                "label": "INVOKES",
+                "color": _severity_color(api.get("severity", "medium"))
+            })
+
+        # 4. Extracted network IPs
+        extracted_ips = static.get("extracted_ips", [])
+        for ip in extracted_ips[:5]:  # Limit to top 5
+            ip_node_id = f"ip_{ip}"
+            if ip_node_id not in seen_nodes:
+                seen_nodes.add(ip_node_id)
+                vis_nodes.append({
+                    "id": ip_node_id,
+                    "label": ip,
+                    "group": "ip",
+                    "title": f"C&C Server IP: {ip}",
+                    "size": 14
+                })
+                
+            vis_edges.append({
+                "from": apk_node_id,
+                "to": ip_node_id,
+                "label": "CONNECTS_TO",
+                "color": "#f59e0b"
+            })
+
+    return {"nodes": vis_nodes, "edges": vis_edges}

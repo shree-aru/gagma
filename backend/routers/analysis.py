@@ -98,6 +98,35 @@ async def get_yara_rule(analysis_id: str):
     return PlainTextResponse(content=yara_text, media_type="text/plain")
 
 
+@router.get("/graph/campaign-clustering")
+async def get_campaign_clustering():
+    """Build a campaign-wide clustering graph from all analyzed APKs."""
+    completed = [
+        {"analysis_id": a.analysis_id}
+        for a in analyses.values()
+        if a.status == AnalysisStatus.COMPLETE
+    ]
+
+    # Fallback to SQLite DB if memory is empty
+    if not completed:
+        try:
+            from services.database import list_analyses as db_list_analyses
+            db_records = db_list_analyses()
+            # De-duplicate
+            seen = set()
+            for r in db_records:
+                aid = r.get("analysis_id")
+                if aid and aid not in seen:
+                    seen.add(aid)
+                    completed.append({"analysis_id": aid})
+        except Exception:
+            pass
+
+    from services.graph_service import generate_campaign_clustering_graph
+    graph_data = generate_campaign_clustering_graph(completed[:6])
+    return graph_data
+
+
 @router.get("/analyses")
 async def list_analyses():
     """List all analyses."""
