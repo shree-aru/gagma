@@ -107,9 +107,10 @@ app.include_router(prevention.router)
 # ── Serve Frontend ─────────────────────────────────────
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 if FRONTEND_DIR.exists():
-    app.mount("/assets", StaticFiles(directory=str(FRONTEND_DIR / "assets")), name="assets")
-    app.mount("/css", StaticFiles(directory=str(FRONTEND_DIR / "css")), name="css")
-    app.mount("/js", StaticFiles(directory=str(FRONTEND_DIR / "js")), name="js")
+    for subdir in ["assets", "css", "js"]:
+        dir_path = FRONTEND_DIR / subdir
+        dir_path.mkdir(parents=True, exist_ok=True)
+        app.mount(f"/{subdir}", StaticFiles(directory=str(dir_path)), name=subdir)
 
     @app.get("/")
     async def serve_frontend():
