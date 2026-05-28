@@ -8,7 +8,7 @@ import logging
 import asyncio
 import httpx
 from datetime import datetime, timezone
-from backend.services.database import get_system_setting
+from services.database import get_system_setting
 
 logger = logging.getLogger(__name__)
 

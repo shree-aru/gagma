@@ -187,7 +187,7 @@ async def _run_full_analysis(analysis_id: str, file_path: Path):
         logger.info(f"[{analysis_id}] Analysis complete!")
 
         # Dispatch SIEM Webhook in the background
-        from backend.services.webhook_service import dispatch_webhook
+        from services.webhook_service import dispatch_webhook
         webhook_payload = {
             "analysis_id": analysis_id,
             "apk_name": static_result.metadata.filename,

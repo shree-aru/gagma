@@ -3,8 +3,8 @@ GAGMA Webhook Router — Configure and test SIEM/MDM automated incident webhooks
 """
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
-from backend.services.database import get_system_setting, save_system_setting, log_audit
-from backend.services.webhook_service import test_webhook_connection
+from services.database import get_system_setting, save_system_setting, log_audit
+from services.webhook_service import test_webhook_connection
 
 router = APIRouter(prefix="/api/webhooks", tags=["webhooks"])
 
