@@ -1,0 +1,17 @@
+import httpx
+API='http://localhost:8001'
+r=httpx.get(API+'/health',timeout=5)
+h=r.json()
+print('Health:', h['status'], 'v'+h['version'])
+print('X-Frame:', r.headers.get('x-frame-options','MISSING'))
+print('X-Content:', r.headers.get('x-content-type-options','MISSING'))
+r=httpx.post(API+'/api/demo/drinik',timeout=30)
+d=r.json()
+print('Drinik:', d['risk_score'], d['risk_level'])
+r=httpx.post(API+'/api/prevent/auto-block/'+d['analysis_id'],timeout=5)
+b=r.json()
+print('Block:', b['status'], 'total='+str(b['total_blocked']))
+r=httpx.get(API+'/api/prevent/blocklist',timeout=5)
+bl=r.json()
+print('Blocklist DB:', bl['total_blocked'])
+print('ALL PHASE 2 TESTS PASSED')

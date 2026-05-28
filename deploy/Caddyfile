@@ -1,0 +1,28 @@
+# GAGMA Reverse Proxy — Auto-HTTPS via Let's Encrypt
+#
+# Option 1: With a domain (recommended for hackathon)
+# Replace YOUR_DOMAIN with your actual domain, e.g., gagma.example.com
+#
+# Option 2: Without a domain (use EC2 public IP)
+# Comment out the domain block and uncomment the IP block below
+
+# ── WITH DOMAIN (uncomment and replace) ──────────────
+# YOUR_DOMAIN {
+#     reverse_proxy gagma:8001
+#     encode gzip
+#     header {
+#         X-Content-Type-Options "nosniff"
+#         X-Frame-Options "DENY"
+#         Strict-Transport-Security "max-age=31536000;"
+#     }
+# }
+
+# ── WITHOUT DOMAIN (HTTP only, for testing) ──────────
+:80 {
+    reverse_proxy gagma:8001
+    encode gzip
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+    }
+}

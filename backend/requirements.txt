@@ -1,0 +1,34 @@
+# GAGMA Backend Dependencies — Enterprise Edition v2.0
+
+# Core
+fastapi==0.115.12
+uvicorn[standard]==0.34.2
+python-multipart==0.0.20
+python-dotenv==1.1.0
+pydantic==2.11.3
+
+# APK Analysis
+androguard==4.1.2
+
+# Graph Database
+neo4j==5.28.1
+
+# LLM Providers (install the one you need)
+google-generativeai==0.8.5
+# openai==1.78.1
+# groq==0.25.0
+
+# Threat Intelligence
+httpx==0.28.1
+
+# Database (persistent storage)
+sqlalchemy==2.0.50
+aiosqlite==0.22.1
+
+# Security
+slowapi==0.1.9
+python-jose[cryptography]==3.5.0
+passlib[bcrypt]==1.7.4
+
+# Utilities
+aiofiles==24.1.0
