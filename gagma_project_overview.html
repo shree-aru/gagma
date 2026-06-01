@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>GAGMA Executive Project Overview</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+    @page {
+      size: A4;
+      margin: 20mm;
+      @bottom-right {
+        content: counter(page);
+        font-family: 'Inter', sans-serif;
+        font-size: 8pt;
+        color: #718096;
+      }
+      @bottom-left {
+        content: "GAGMA Project Overview — PSB Hackathon 2026";
+        font-family: 'Inter', sans-serif;
+        font-size: 8pt;
+        color: #718096;
+      }
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      color: #1a202c;
+      line-height: 1.6;
+      font-size: 10.5pt;
+    }
+
+    h1, h2, h3, h4 {
+      font-family: 'Outfit', sans-serif;
+      color: #0b192c;
+      font-weight: 700;
+      page-break-after: avoid;
+    }
+
+    h1 {
+      font-size: 26pt;
+      margin-bottom: 5px;
+      color: #0088cc;
+    }
+
+    .subtitle {
+      font-size: 14pt;
+      color: #4a5568;
+      margin-top: 0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .cover {
+      page-break-after: always;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      height: 100%;
+      padding-top: 50mm;
+    }
+
+    .cover-meta {
+      margin-top: auto;
+      border-top: 2px solid #e2e8f0;
+      padding-top: 20px;
+      font-size: 10pt;
+      color: #718096;
+    }
+
+    .cover-tag {
+      display: inline-block;
+      background: rgba(0, 136, 204, 0.1);
+      color: #0088cc;
+      padding: 6px 12px;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 9pt;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    h2 {
+      font-size: 18pt;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 6px;
+      margin-top: 30px;
+      color: #0b192c;
+    }
+
+    h3 {
+      font-size: 13pt;
+      margin-top: 20px;
+      color: #0088cc;
+    }
+
+    p {
+      margin-bottom: 15px;
+      text-align: justify;
+    }
+
+    ul, ol {
+      margin-bottom: 15px;
+      padding-left: 20px;
+    }
+
+    li {
+      margin-bottom: 5px;
+    }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      background: #f7fafc;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 9pt;
+      color: #e53e3e;
+    }
+
+    .code-block {
+      display: block;
+      font-family: 'JetBrains Mono', monospace;
+      background: #f7fafc;
+      border: 1px solid #e2e8f0;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 8.5pt;
+      white-space: pre-wrap;
+      margin-bottom: 15px;
+      color: #2d3748;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      page-break-inside: avoid;
+    }
+
+    th, td {
+      border: 1px solid #e2e8f0;
+      padding: 10px 12px;
+      text-align: left;
+      font-size: 9.5pt;
+    }
+
+    th {
+      background-color: #f7fafc;
+      font-weight: 600;
+      color: #0b192c;
+    }
+
+    .card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      page-break-inside: avoid;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+
+    .highlight {
+      color: #0088cc;
+      font-weight: 600;
+    }
+
+    .badge-rbi {
+      display: inline-block;
+      background: #fffaf0;
+      border: 1px solid #feebc8;
+      color: #dd6b20;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 8pt;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Cover Page -->
+  <div class="cover">
+    <div class="cover-tag">PSB Hackathon 2026 Submission</div>
+    <h1>GAGMA</h1>
+    <div class="subtitle">Graph-Augmented GenAI Malware Analyst</div>
+    
+    <p style="font-size: 12pt; color: #4a5568; margin-bottom: 40px;">
+      An enterprise-ready, Generative AI-powered Android APK malware reverse engineering, call-graph modeling, and security orchestration response platform.
+    </p>
+
+    <div class="cover-meta">
+      <strong>Theme:</strong> Generative AI-Based Automated Analysis & Risk Scoring of Fraudulent APKs<br>
+      <strong>Framework:</strong> Aligned with Reserve Bank of India (RBI) Cybersecurity mandates and CERT-In Incident Response SLA Guidelines.<br>
+      <strong>Repository:</strong> https://github.com/shree-aru/gagma.git<br>
+      <strong>Server Host IP:</strong> http://3.229.117.157
+    </div>
+  </div>
+
+  <!-- Document Body -->
+  
+  <h2>1. Executive Summary & Purpose</h2>
+  <p>
+    Modern mobile threats targeted at banking infrastructure operate with rapid agility. Fraudulent applications (APKs) distributed via SMS phishing, fake landing pages, and messaging applications exfiltrate SMS OTP codes, inject credit card overlay screens, and execute unauthorized payments behind legitimate banking apps. 
+  </p>
+  <p>
+    Manual reverse engineering of these threat vectors is slow and resource-heavy. <span class="highlight">GAGMA (Graph-Augmented GenAI Malware Analyst)</span> automates this pipeline entirely. By combining a multi-agent Generative AI system with a high-performance **Neo4j graph database**, GAGMA decompiles APK files, creates structural and call-graph database models, runs risk assessment models, and dispatches real-time, explainable alert payloads to enterprise security networks.
+  </p>
+
+  <h2>2. Architecture & Pipeline Breakdown</h2>
+  <p>
+    GAGMA has a modular, automated workflow that processes a raw APK file to a completed incident response deployment in seconds:
+  </p>
+
+  <div class="card">
+    <strong>Step 1: APK Ingestion & Smali/Java Decompilation</strong><br>
+    The system accepts single APK uploads through a FastAPI interface. In the backend, the decompiler utilizing <code>jadx</code> disassembles smali files and recovers human-readable Java classes, resources, and configuration mappings from <code>AndroidManifest.xml</code>.
+  </div>
+
+  <div class="card">
+    <strong>Step 2: Neo4j Call-Graph Ingestion</strong><br>
+    The extracted parameters (method declarations, classes, cross-method call loops, requested permissions, network URLs, and hardcoded C2 IP addresses) are compiled into dynamic relational objects and stored inside a high-speed **Neo4j Malware Knowledge Graph (MKG)**. Nodes map method execution paths while relationships represent <code>[:CALLS]</code>, <code>[:REQUESTS_PERMISSION]</code>, or <code>[:CONNECTS_TO]</code> connections.
+  </div>
+
+  <div class="card">
+    <strong>Step 3: Multi-Agent GenAI Threat Assessment Core</strong><br>
+    Specialized GenAI agents consult the Malware Knowledge Graph to audit method pathways. The agents perform logical code interpretation of obfuscated sections, cross-reference external threat intelligence (VirusTotal & AbuseIPDB APIs), evaluate risk weights, and write clear, natural language explanation summaries regarding the exact malicious behavior found.
+  </div>
+
+  <h2>3. Key Features & Integrations</h2>
+
+  <h3>3.1. Collapsible CSO Virtual Smartphone (UI Sandbox Showcase)</h3>
+  <p>
+    To provide a highly interactive dashboard experience, a virtual representation of a Chief Security Officer's (CSO) smartphone floats in the bottom-right corner of the GAGMA interface. 
+  </p>
+  <ul>
+    <li><strong>Sleek Footprint:</strong> Collapses by default into a glowing notification bubble to keep the main dashboard unobstructed.</li>
+    <li><strong>Auto-Wake:</strong> Instantly expands, vibrates, and triggers a physical notification chime as soon as an APK threat is parsed!</li>
+    <li><strong>Interactive Chat Drawer:</strong> Renders a high-fidelity WhatsApp conversation drawer allowing administrative personnel to click <strong>"Lock & Quarantine Device"</strong> to authorize immediate virtual device lockdowns.</li>
+  </ul>
+
+  <h3>3.2. Automated Incident Response Webhooks (SIEM/MDM Gateway)</h3>
+  <p>
+    GAGMA is fully integrated with enterprise SIEM (Security Information and Event Management) platforms. The gateway dispatches structured JSON webhook payloads containing full method paths, targeted banks, and risk scores to corporate security centers immediately upon threat identification.
+  </p>
+
+  <h3>3.3. Multi-Channel Redundant Mobile Alerts (WhatsApp & Telegram)</h3>
+  <p>
+    To ensure immediate response under severe incidents, GAGMA implements a dual alerting framework:
+  </p>
+  <ul>
+    <li><strong>WhatsApp Gateway (CallMeBot):</strong> Dispatches instant alert cards directly to security administrators' personal phones.</li>
+    <li><strong>Telegram Gateway (Backup Bot):</strong> Integrates a high-reliability fallback utilizing the official <code>@GagmaAlertsBot</code>, returning instant notification cards with zero delays or rate limits.</li>
+  </ul>
+
+  <h2>4. Regulatory Compliance & RBI Security Standards</h2>
+  <p>
+    GAGMA is built specifically to address the stringent security needs of the Indian banking ecosystem:
+  </p>
+  
+  <table>
+    <thead>
+      <tr>
+        <th>Regulatory Authority</th>
+        <th>Mandate / Guideline</th>
+        <th>GAGMA Compliance Implementation</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Reserve Bank of India (RBI)</strong></td>
+        <td>IT & Cybersecurity Master Direction (2023)</td>
+        <td>Automated threat detection and isolated sandboxing of critical API exposures.</td>
+      </tr>
+      <tr>
+        <td><strong>CERT-In</strong></td>
+        <td>Emergency Incident Response & Recovery SLA</td>
+        <td>Instant automated alerting (under 60s) via Webhooks, WhatsApp, and Telegram.</td>
+      </tr>
+      <tr>
+        <td><strong>MITRE ATT&CK Mobile</strong></td>
+        <td>Threat Tactic Classification Framework</td>
+        <td>Automatic mapping of static APK calls to standard MITRE mobile attack matrices.</td>
+      </tr>
+      <tr>
+        <td><strong>NPCI / UPI Guidelines</strong></td>
+        <td>Fraud Prevention in Digital Payments</td>
+        <td>Dedicated checks for overlays targeting UPI apps, Google Pay, PhonePe, and major net-banking packages.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>5. Technical Tech Stack Summary</h2>
+  <ul>
+    <li><strong>Backend Core:</strong> Python 3.11, FastAPI (Asynchronous framework), SQLite3 (System settings metadata).</li>
+    <li><strong>Graph Database:</strong> Neo4j (Graph data mapping, Cypher translation).</li>
+    <li><strong>Reverse Engineering:</strong> <code>jadx</code>, <code>Apktool</code>, <code>Androguard</code>.</li>
+    <li><strong>GenAI Core:</strong> Google Gemini Pro / OpenAI GPT API orchestrators.</li>
+    <li><strong>Frontend UI:</strong> Clean HTML5, Vanilla CSS, Vis.js (Interactive knowledge graph networks), Javascript.</li>
+  </ul>
+
+  <p style="margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 10px; font-size: 9pt; color: #718096; text-align: center;">
+    Report compiled by WeasyPrint for GAGMA Development Team. All rights reserved.
+  </p>
+
+</body>
+</html>
