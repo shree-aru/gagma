@@ -17,7 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
   loadBlocklistFeed();
   setupWebhookGateway();
   setupWhatsAppGateway();
-  setupTelegramGateway();
   setInterval(loadStats, 10000);
   setInterval(loadBlocklistFeed, 12000);
 });
@@ -1087,80 +1086,4 @@ function openVirtualWhatsApp() {
   }
 }
 
-// ── Telegram Bot Alert Gateway ───────────────────────────
-async function setupTelegramGateway() {
-  const checkEnabled = document.getElementById('tg-enabled');
-  const inputChatId = document.getElementById('tg-chat-id');
-  const inputBotToken = document.getElementById('tg-bot-token');
-  const btnSave = document.getElementById('btn-save-tg');
-  const btnTest = document.getElementById('btn-test-tg');
-  const statusMsg = document.getElementById('tg-status-msg');
 
-  if (!checkEnabled || !inputChatId || !inputBotToken || !btnSave || !btnTest || !statusMsg) return;
-
-  // Load existing config
-  try {
-    const res = await fetch(`${API}/api/webhooks/telegram`);
-    const config = await res.json();
-    checkEnabled.checked = config.enabled;
-    inputChatId.value = config.chat_id || '';
-    inputBotToken.value = config.bot_token || '';
-    if (config.enabled && config.chat_id) {
-      statusMsg.innerHTML = `Active Telegram Alerting: <strong style="color:#0088cc">ENABLED</strong> &nbsp;·&nbsp; <span style="color:var(--text-2)">Broadcasting threats to Chat ID: ${esc(config.chat_id)}</span>`;
-    }
-  } catch (_) {}
-
-  // Save Settings
-  btnSave.addEventListener('click', async () => {
-    const enabled = checkEnabled.checked;
-    const chat_id = inputChatId.value.trim();
-    const bot_token = inputBotToken.value.trim();
-
-    if (enabled && !chat_id) {
-      statusMsg.innerHTML = `<span style="color:var(--red)">Error: Telegram Chat ID is required to enable alerts.</span>`;
-      return;
-    }
-
-    statusMsg.innerHTML = `<span style="color:var(--orange)">Updating Telegram alert registry...</span>`;
-    try {
-      const res = await fetch(`${API}/api/webhooks/telegram`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ enabled, chat_id, bot_token })
-      });
-      if (res.ok) {
-        statusMsg.innerHTML = `Active Telegram Alerting: <strong style="color:#0088cc">${enabled ? 'ENABLED' : 'DISABLED'}</strong> &nbsp;·&nbsp; <span style="color:var(--text-2)">Configuration successfully locked to SQLite.</span>`;
-      } else {
-        statusMsg.innerHTML = `<span style="color:var(--red)">Failed to save configuration.</span>`;
-      }
-    } catch (err) {
-      statusMsg.innerHTML = `<span style="color:var(--red)">Connection Error: ${err.message}</span>`;
-    }
-  });
-
-  // Test Alerts
-  btnTest.addEventListener('click', async () => {
-    const chat_id = inputChatId.value.trim();
-    const bot_token = inputBotToken.value.trim();
-    if (!chat_id) {
-      statusMsg.innerHTML = `<span style="color:var(--red)">Error: Input Telegram Chat ID to send test message.</span>`;
-      return;
-    }
-    statusMsg.innerHTML = `<span style="color:var(--orange)">Broadcasting instant Telegram test payload...</span>`;
-    try {
-      const res = await fetch(`${API}/api/webhooks/telegram/test`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ enabled: true, chat_id, bot_token })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        statusMsg.innerHTML = `Test Dispatch: <strong style="color:#0088cc">SUCCESS</strong> &nbsp;·&nbsp; <span style="color:var(--text-2)">Check Telegram! Test message sent.</span>`;
-      } else {
-        statusMsg.innerHTML = `Test Dispatch: <strong style="color:var(--red)">FAILED</strong> &nbsp;·&nbsp; <span style="color:var(--red)">${data.detail || 'Service connection error.'}</span>`;
-      }
-    } catch (err) {
-      statusMsg.innerHTML = `Test Dispatch: <strong style="color:var(--red)">ERROR</strong> &nbsp;·&nbsp; <span style="color:var(--red)">${err.message}</span>`;
-    }
-  });
-}
